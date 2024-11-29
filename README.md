@@ -5,4 +5,4 @@ Best user, if you want to copy please read the licence!
 
 You have to make sure to add the company name!
 
--- Head-of-Flox-Company
+- Head-of-Flox-Company
