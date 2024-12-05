@@ -1,20 +1,40 @@
-<!-- This work is based on software originally created by Flox-Company. modified by saerio in a manner that removes all flox company owned code. herebye granted to the Flox-company free of charge indefinetly-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GitHub User Info</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/github-calendar/1.4.0/github-calendar.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-calendar/1.4.0/github-calendar-responsive.min.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
 </head>
 <body>
   <h1>GitHub User Repositories</h1>
   <p id="username"></p>
-  <ul id="repos"></ul>
 
-  <h2>Contribution Heatmap</h2>
-  <div id="calendar"></div>
+  <!-- Table to display repository data -->
+  <table id="repoTable">
+    <thead>
+      <tr>
+        <th>Repository</th>
+        <th>Stars</th>
+        <th>Forks</th>
+        <th>Commits</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
     (async function () {
@@ -37,16 +57,42 @@
         if (!response.ok) throw new Error('Failed to fetch repositories.');
 
         const repos = await response.json();
-        const repoList = document.getElementById('repos');
+        const repoTable = document.getElementById('repoTable').getElementsByTagName('tbody')[0];
 
-        repos.forEach(repo => {
-          const li = document.createElement('li');
-          li.innerHTML = `<a href="${repo.html_url}" target="_blank">${repo.name}</a>`;
-          repoList.appendChild(li);
-        });
+        // For each repository, fetch additional details and display in table
+        for (let repo of repos) {
+          const row = document.createElement('tr');
 
-        // Load GitHub Calendar
-        new GitHubCalendar("#calendar", username);
+          // Repository Name
+          const nameCell = document.createElement('td');
+          nameCell.innerHTML = `<a href="${repo.html_url}" target="_blank">${repo.name}</a>`;
+          row.appendChild(nameCell);
+
+          // Stars
+          const starsCell = document.createElement('td');
+          starsCell.innerText = repo.stargazers_count;
+          row.appendChild(starsCell);
+
+          // Forks
+          const forksCell = document.createElement('td');
+          forksCell.innerText = repo.forks_count;
+          row.appendChild(forksCell);
+
+          // Commits
+          const commitsCell = document.createElement('td');
+          // Fetch commit count (last 100 commits)
+          const commitsResponse = await fetch(`https://api.github.com/repos/${username}/${repo.name}/commits?per_page=1`);
+          if (commitsResponse.ok) {
+            const commits = await commitsResponse.json();
+            commitsCell.innerText = commits.length; // Display number of commits
+          } else {
+            commitsCell.innerText = 'N/A';
+          }
+          row.appendChild(commitsCell);
+
+          // Add the row to the table
+          repoTable.appendChild(row);
+        }
       } catch (error) {
         console.error('Error:', error);
         document.getElementById('username').innerText = 'An error occurred. Check the console for details.';
